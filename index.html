@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Intercambio navideño</title>
+<meta property="og:title" content="Intercambio navideño">
+<meta property="og:description" content="Abre tu link para ver a quién le regalas.">
+<meta name="theme-color" content="#24392f">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#2a2420;--soft:#6f645b;--line:#e4d9c9;--paper:#f7f1e7;--card:#fffdf9;--pine:#24392f;--berry:#9b2f2a;--gold:#b48a3c;--ok:#3d6b4f}
+html{-webkit-text-size-adjust:100%}
+body{font-family:Figtree,system-ui,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.45}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;background-image:radial-gradient(#d9ccb6 .6px,transparent .6px);background-size:7px 7px;z-index:-1}
+.top{background:var(--pine);color:#f4ead8;padding:28px 22px 46px;position:relative;overflow:hidden}
+.top:after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;background:repeating-linear-gradient(90deg,var(--berry) 0 14px,#f4ead8 14px 18px,var(--pine) 18px 32px,#f4ead8 32px 36px);opacity:.9}
+.top .kicker{font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.75}
+.top h1{font-family:Fraunces,serif;font-weight:600;font-size:30px;line-height:1.1;margin-top:6px;max-width:440px}
+.top p{font-size:14px;opacity:.8;margin-top:8px;max-width:420px}
+.sprig{position:absolute;right:-10px;top:10px;width:120px;opacity:.22}
+main{max-width:520px;margin:-22px auto 0;padding:0 14px 30px;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 18px;margin-bottom:14px;box-shadow:0 1px 0 #fff inset,0 6px 18px -12px #5a43284d}
+.card h2{font-family:Fraunces,serif;font-weight:600;font-size:20px;margin-bottom:4px}
+.card .sub{color:var(--soft);font-size:13.5px;margin-bottom:12px}
+.step{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--berry);margin-bottom:4px}
+label{display:block;font-size:13px;font-weight:600;color:var(--soft);margin:12px 0 5px}
+input,textarea,select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:#fff;border:1px solid #d9cdbb;border-radius:10px;padding:12px}
+textarea{min-height:92px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid #b48a3c55;border-color:var(--gold)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:11px;padding:14px 16px;font:600 15px Figtree,sans-serif;cursor:pointer;text-decoration:none;width:100%;margin-top:12px}
+.btn.main{background:var(--berry);color:#fff}
+.btn.main:active{transform:translateY(1px)}
+.btn.quiet{background:transparent;border:1px solid #d9cdbb;color:var(--ink)}
+.btn.pine{background:var(--pine);color:#f4ead8}
+.btn[disabled]{opacity:.5}
+.status{font-size:12.5px;color:var(--soft);text-align:right;min-height:18px;margin-top:6px}
+.person{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #efe6d8}
+.person:last-child{border-bottom:0}
+.num{width:24px;font-size:12px;color:#a8998a;text-align:right;flex:none}
+.person input{border:0;border-bottom:1px dashed transparent;border-radius:0;padding:6px 2px;background:transparent}
+.person input:focus{outline:0;border-bottom-color:var(--gold)}
+.del{background:none;border:0;color:#b09f8f;font-size:20px;width:34px;height:34px;cursor:pointer;flex:none;border-radius:8px}
+.del:hover{background:#f3ebe0;color:var(--berry)}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.addrow input{flex:1}
+.addrow .btn{width:auto;margin:0;padding:0 18px}
+.link{font-size:13.5px;color:var(--pine);text-decoration:underline;background:none;border:0;cursor:pointer;font-family:inherit;margin-top:10px}
+.empty{color:var(--soft);font-size:14px;padding:14px;border:1px dashed #d9cdbb;border-radius:10px;text-align:center}
+.count{display:inline-block;background:#efe5d4;border-radius:20px;padding:2px 10px;font-size:12.5px;font-weight:600;color:var(--soft);margin-left:6px;vertical-align:middle;font-family:Figtree}
+.row{padding:12px 0;border-bottom:1px solid #efe6d8}
+.row:last-child{border-bottom:0}
+.row .nm{font-weight:600}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.tag{font-size:12px;padding:2px 8px;border-radius:20px;background:#f1eadf;color:var(--soft)}
+.tag.on{background:#e3eee6;color:var(--ok)}
+.acts{display:flex;gap:8px}
+.acts .btn{margin:0;padding:10px 12px;font-size:14px}
+.wa{background:#1f7a4d;color:#fff}
+.excl{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:7px 0;border-bottom:1px solid #efe6d8}
+.pairs div{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #efe6d8;font-size:14.5px}
+.note{font-size:13px;color:var(--soft);background:#f6efe2;border-radius:10px;padding:10px 12px;margin-top:10px}
+.foot{text-align:center;font-size:11.5px;color:#a3958a;padding:8px 0 26px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;z-index:20;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.hide{display:none!important}
+/* participante */
+.envelope{margin:6px auto 4px;width:220px;height:150px;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.envelope .body{position:absolute;inset:0;background:#f0e2c8;border-radius:8px;border:1px solid #dcc8a5}
+.envelope .flap{position:absolute;left:0;right:0;top:0;height:90px;background:#e8d5b2;clip-path:polygon(0 0,100% 0,50% 100%);border-radius:8px 8px 0 0;transform-origin:top;transition:transform .6s}
+.envelope .seal{position:absolute;left:50%;top:68px;width:42px;height:42px;margin-left:-21px;border-radius:50%;background:var(--berry);color:#f4ead8;font-family:Fraunces,serif;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 #6e1f1b;transition:opacity .3s}
+.envelope.open .flap{transform:rotateX(180deg)}
+.envelope.open .seal{opacity:0}
+.reveal{text-align:center}
+.reveal .lbl{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--soft)}
+.reveal .who{font-family:Fraunces,serif;font-size:34px;font-weight:600;color:var(--berry);line-height:1.15;margin:6px 0 2px}
+.wishbox{background:#fbf6ec;border-left:3px solid var(--gold);padding:12px 14px;border-radius:6px;white-space:pre-wrap;text-align:left;font-size:14.5px;margin-top:12px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14.5px}
+.facts dt{color:var(--soft)}
+.facts dd{font-weight:600}
+.msg{white-space:pre-wrap;font-size:14.5px}
+@media (min-width:600px){.top{padding:36px 24px 52px}.top h1{font-size:36px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <svg class="sprig" viewBox="0 0 100 100" fill="none" stroke="#f4ead8" stroke-width="2"><path d="M50 95V10M50 30l-18-12M50 30l18-12M50 50l-24-14M50 50l24-14M50 70l-28-14M50 70l28-14"/><circle cx="30" cy="80" r="5" fill="#f4ead8"/><circle cx="40" cy="86" r="4" fill="#f4ead8"/></svg>
+  <div class="kicker" id="kicker">Intercambio de regalos</div>
+  <h1 id="title">Intercambio navideño</h1>
+  <p id="subtitle"></p>
+</header>
+<main id="app">
+  <div class="card"><p class="sub" style="margin:0">Cargando…</p></div>
+</main>
+<p class="foot">Hecho por Eduardo García Soluciones</p>
+<div class="toast" id="toast"></div>
+
+<script>
+const API='https://ustkwaeyanwhdoirrpld.supabase.co/rest/v1/rpc/';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzdGt3YWV5YW53aGRvaXJycGxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzNTk0OTcsImV4cCI6MjEwOTkzNTQ5N30.FJS_Sv-CnZc1jwTKP1v6FSQhr7IqIT4tynFz9aMRwQk';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2400)}
+async function rpc(fn,args){
+  const r=await fetch(API+fn,{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(args)});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok){const m=(j&&j.message)||'error';throw new Error(m)}
+  return j;
+}
+function fecha(d){if(!d)return'';try{const s=new Date(d+'T12:00').toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long'});return s.charAt(0).toUpperCase()+s.slice(1)}catch(e){return d}}
+const hash=new URLSearchParams(location.hash.slice(1));
+const ADMIN=hash.get('a'), PTOK=hash.get('p');
+const BASE=location.origin+location.pathname;
+
+if(ADMIN) adminInit(); else if(PTOK) partInit(); else noLink();
+
+function noLink(){
+  $('#subtitle').textContent='';
+  $('#app').innerHTML=`<div class="card"><h2>Necesitas tu link personal</h2><p class="sub" style="margin-top:6px">Cada participante recibe un link propio por WhatsApp. Pídeselo a quien organiza el intercambio.</p></div>`;
+}
+
+/* ================= ORGANIZADORA ================= */
+let S=null; // {group, people}
+let saveTimer=null;
+async function adminInit(){
+  $('#kicker').textContent='Panel de la organizadora';
+  try{S=await rpc('ix_admin_get',{tok:ADMIN})}catch(e){
+    $('#app').innerHTML=`<div class="card"><h2>Este link no funciona</h2><p class="sub" style="margin-top:6px">Revisa que lo hayas copiado completo.</p></div>`;return}
+  renderAdmin();
+}
+function settingsFromForm(){
+  return{name:$('#gName').value,event_date:$('#gDate').value,event_time:$('#gTime').value,place:$('#gPlace').value,budget:$('#gBudget').value,message:$('#gMsg').value,exclusions:S.group.exclusions||[]};
+}
+function peopleList(){return S.people.map(p=>({id:p.id,name:p.name}))}
+async function save(people,opts={}){
+  $('#saveSt')&&($('#saveSt').textContent='Guardando…');
+  try{
+    S=await rpc('ix_admin_save',{tok:ADMIN,settings:settingsFromForm(),people:people||peopleList()});
+    $('#saveSt')&&($('#saveSt').textContent='Cambios guardados');
+    if(opts.full)renderAdmin(); else {renderHead();renderPeople();renderDraw();}
+  }catch(e){toast('No se pudo guardar. Revisa tu internet e inténtalo otra vez.');$('#saveSt')&&($('#saveSt').textContent='Sin guardar')}
+}
+function drawn(){return !!S.group.drawn_at}
+function confirmBreak(){return !drawn()||confirm('Ya hiciste el sorteo. Si cambias la lista hay que volver a sortear.\n\nLos links de cada persona siguen siendo los mismos, solo avísales que se sorteó de nuevo. ¿Continuar?')}
+function renderHead(){
+  $('#title').textContent=S.group.name||'Intercambio navideño';
+  const bits=[fecha(S.group.event_date),S.group.budget].filter(Boolean);
+  $('#subtitle').textContent=bits.join(' · ')||'Llena los datos, agrega a quienes participan y haz el sorteo.';
+}
+function renderAdmin(){
+  const g=S.group;
+  renderHead();
+  $('#app').innerHTML=`
+  <section class="card">
+    <div class="step">Paso 1</div><h2>Datos del intercambio</h2>
+    <p class="sub">Todo se guarda solo. Puedes cambiarlo cuando quieras.</p>
+    <label for="gName">Nombre del intercambio</label><input id="gName" value="${esc(g.name)}" maxlength="80">
+    <div class="two">
+      <div><label for="gDate">Fecha</label><input id="gDate" type="date" value="${esc(g.event_date||'')}"></div>
+      <div><label for="gTime">Hora <span style="font-weight:400">(opcional)</span></label><input id="gTime" value="${esc(g.event_time)}" placeholder="Ej. 6:00 pm" maxlength="40"></div>
+    </div>
+    <label for="gPlace">Lugar <span style="font-weight:400">(opcional)</span></label><input id="gPlace" value="${esc(g.place)}" placeholder="Ej. Casa de Paty" maxlength="150">
+    <label for="gBudget">Monto del regalo</label><input id="gBudget" value="${esc(g.budget)}" placeholder="Ej. $300 a $400" maxlength="60">
+    <label for="gMsg">Mensaje o reglas para el grupo <span style="font-weight:400">(opcional)</span></label>
+    <textarea id="gMsg" placeholder="Ej. Traer el regalo envuelto y con el nombre de quien lo recibe.">${esc(g.message)}</textarea>
+    <div class="status" id="saveSt"></div>
+  </section>
+  <section class="card">
+    <div class="step">Paso 2</div><h2>Participantes <span class="count" id="cnt"></span></h2>
+    <p class="sub">Toca un nombre para corregirlo.</p>
+    <div id="people"></div>
+    <div class="addrow"><input id="newName" placeholder="Nombre" maxlength="60" enterkeyhint="done"><button class="btn pine" id="addBtn">Agregar</button></div>
+    <button class="link" id="bulkToggle">¿Tienes la lista completa? Pégala aquí</button>
+    <div id="bulk" class="hide">
+      <label for="bulkTxt">Un nombre por renglón</label>
+      <textarea id="bulkTxt" placeholder="Paty&#10;Gaby&#10;Lucía"></textarea>
+      <button class="btn quiet" id="bulkAdd">Agregar todos</button>
+    </div>
+    <details style="margin-top:14px"><summary style="cursor:pointer;font-size:14px;color:var(--pine)">Parejas que no se deben tocar (opcional)</summary>
+      <p class="sub" style="margin-top:8px">Por ejemplo, hermanas o esposos que no quieren regalarse entre sí.</p>
+      <div id="exList"></div>
+      <div class="two"><select id="exA"></select><select id="exB"></select></div>
+      <button class="btn quiet" id="exAdd">Agregar pareja</button>
+    </details>
+  </section>
+  <section class="card" id="drawCard"></section>`;
+  ['gName','gDate','gTime','gPlace','gBudget','gMsg'].forEach(id=>$('#'+id).addEventListener('input',()=>{
+    $('#saveSt').textContent='…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(),700)}));
+  $('#addBtn').onclick=addOne;
+  $('#newName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addOne()}});
+  $('#bulkToggle').onclick=()=>$('#bulk').classList.toggle('hide');
+  $('#bulkAdd').onclick=()=>{
+    const names=$('#bulkTxt').value.split(/\n|,/).map(s=>s.trim()).filter(Boolean);
+    if(!names.length)return toast('Escribe al menos un nombre');
+    if(!confirmBreak())return;
+    const have=new Set(S.people.map(p=>p.name.toLowerCase()));
+    const fresh=names.filter(n=>{const k=n.toLowerCase();if(have.has(k))return false;have.add(k);return true});
+    save([...peopleList(),...fresh.map(name=>({name}))]).then(()=>{$('#bulkTxt').value='';$('#bulk').classList.add('hide');toast(fresh.length+' agregadas')});
+  };
+  $('#exAdd').onclick=()=>{
+    const a=$('#exA').value,b=$('#exB').value;
+    if(!a||!b||a===b)return toast('Elige dos personas distintas');
+    if(!confirmBreak())return;
+    S.group.exclusions=[...(S.group.exclusions||[]),[a,b]];save(null);
+  };
+  renderPeople();renderDraw();
+}
+function addOne(){
+  const n=$('#newName').value.trim();
+  if(!n)return toast('Escribe un nombre');
+  if(S.people.some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Ese nombre ya está en la lista');
+  if(!confirmBreak())return;
+  $('#newName').value='';
+  save([...peopleList(),{name:n}]).then(()=>$('#newName').focus());
+}
+function renderPeople(){
+  $('#cnt').textContent=S.people.length;
+  $('#people').innerHTML=S.people.length?S.people.map((p,i)=>`<div class="person"><span class="num">${i+1}</span><input value="${esc(p.name)}" data-id="${p.id}" maxlength="60" aria-label="Nombre"><button class="del" data-id="${p.id}" aria-label="Quitar">×</button></div>`).join('')
+    :`<div class="empty">Aún no hay nadie. Escribe el primer nombre abajo.</div>`;
+  document.querySelectorAll('.person input').forEach(inp=>inp.addEventListener('change',()=>{
+    const v=inp.value.trim();const p=S.people.find(x=>x.id===inp.dataset.id);
+    if(!v){inp.value=p.name;return}
+    p.name=v;save();
+  }));
+  document.querySelectorAll('.person .del').forEach(b=>b.onclick=()=>{
+    const p=S.people.find(x=>x.id===b.dataset.id);
+    if(!confirm('¿Quitar a '+p.name+' del intercambio?'))return;
+    if(!confirmBreak())return;
+    S.group.exclusions=(S.group.exclusions||[]).filter(e=>!e.includes(p.id));
+    save(peopleList().filter(x=>x.id!==p.id));
+  });
+  // exclusiones
+  const name=id=>(S.people.find(p=>p.id===id)||{}).name;
+  const ex=(S.group.exclusions||[]).filter(e=>name(e[0])&&name(e[1]));
+  $('#exList').innerHTML=ex.map((e,i)=>`<div class="excl"><span>${esc(name(e[0]))} y ${esc(name(e[1]))}</span><button class="del" data-ex="${i}" aria-label="Quitar">×</button></div>`).join('');
+  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{if(!confirmBreak())return;S.group.exclusions=ex.filter((_,i)=>i!=b.dataset.ex);save(null)});
+  const opts='<option value="">Elige…</option>'+S.people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
+  $('#exA').innerHTML=opts;$('#exB').innerHTML=opts;
+}
+let pollT=null;
+function renderDraw(){
+  const c=$('#drawCard');clearInterval(pollT);
+  if(!drawn()){
+    c.innerHTML=`<div class="step">Paso 3</div><h2>Sorteo</h2>
+      <p class="sub">Cuando ya estén todos los nombres, haz el sorteo. A nadie le sale su propio nombre y nadie, ni tú, ve los resultados.</p>
+      ${S.people.length<3?'<div class="note">Agrega al menos 3 personas para poder sortear.</div>':''}
+      <button class="btn main" id="drawBtn" ${S.people.length<3?'disabled':''}>Hacer el sorteo</button>`;
+    $('#drawBtn').onclick=doDraw;return;
+  }
+  const opened=S.people.filter(p=>p.opened).length;
+  c.innerHTML=`<div class="step">Paso 3</div><h2>Manda los links</h2>
+    <p class="sub">El sorteo ya está hecho. Manda a cada persona su link personal; ahí ve a quién le regala y escribe su lista de deseos.</p>
+    <div class="tags"><span class="tag on">${opened} de ${S.people.length} ya abrieron su link</span></div>
+    <div id="links">${S.people.map(p=>`<div class="row"><div class="nm">${esc(p.name)}</div>
+      <div class="tags"><span class="tag ${p.opened?'on':''}">${p.opened?'Ya lo abrió':'Aún no lo abre'}</span>${p.has_wish?'<span class="tag on">Lista de deseos lista</span>':''}</div>
+      <div class="acts"><button class="btn quiet" data-copy="${p.id}">Copiar link</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(waText(p))}">WhatsApp</a></div></div>`).join('')}</div>
+    <button class="btn quiet" id="refresh">Actualizar quién ya abrió</button>
+    <button class="btn quiet" id="redraw">Volver a sortear</button>
+    <button class="link" id="reveal">Ver quién le toca a quién</button>
+    <div id="pairs" class="pairs"></div>`;
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const p=S.people.find(x=>x.id===b.dataset.copy);copy(BASE+'#p='+p.token,b)});
+  $('#refresh').onclick=refresh;
+  $('#redraw').onclick=()=>{if(confirm('¿Volver a sortear? Lo que cada quien ya vio deja de valer. Los links siguen siendo los mismos, pero avísales que se sorteó de nuevo.'))doDraw()};
+  $('#reveal').onclick=reveal;
+  pollT=setInterval(refresh,30000);
+}
+function waText(p){
+  return `¡Hola ${p.name}! Ya quedó el sorteo de "${S.group.name}". En este link ves a quién le regalas y puedes dejar tu lista de deseos. Es solo tuyo, no lo compartas:\n${BASE}#p=${p.token}`;
+}
+async function copy(t,b){
+  try{await navigator.clipboard.writeText(t)}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
+  if(b){const o=b.textContent;b.textContent='Copiado';setTimeout(()=>b.textContent=o,1500)}
+}
+async function refresh(){try{S=await rpc('ix_admin_get',{tok:ADMIN});renderPeople();renderDraw()}catch(e){}}
+async function doDraw(){
+  const b=$('#drawBtn')||$('#redraw');if(b){b.disabled=true;b.textContent='Sorteando…'}
+  try{S=await rpc('ix_admin_draw',{tok:ADMIN});renderDraw();toast('¡Listo! Sorteo hecho');$('#drawCard').scrollIntoView({behavior:'smooth'})}
+  catch(e){toast(e.message==='sin_solucion'?'Con esas parejas excluidas no se puede sortear. Quita alguna.':'No se pudo sortear, inténtalo otra vez.');renderDraw()}
+}
+async function reveal(){
+  if($('#pairs').innerHTML){$('#pairs').innerHTML='';return}
+  if(!confirm('Esto te muestra a quién le tocó cada persona. Si lo ves, ya no será secreto para ti. ¿Seguro?'))return;
+  try{const r=await rpc('ix_admin_reveal',{tok:ADMIN});$('#pairs').innerHTML=r.map(x=>`<div><span>${esc(x.from)}</span><span>→ ${esc(x.to)}</span></div>`).join('')}catch(e){toast('No se pudo cargar')}
+}
+
+/* ================= PARTICIPANTE ================= */
+async function partInit(){
+  let d;
+  try{d=await rpc('ix_me',{ptok:PTOK})}catch(e){
+    $('#app').innerHTML=`<div class="card"><h2>Este link no funciona</h2><p class="sub" style="margin-top:6px">Pídele a la organizadora que te lo vuelva a mandar.</p></div>`;return}
+  const g=d.group;
+  $('#title').textContent=g.name;
+  $('#kicker').textContent='Hola, '+d.me;
+  $('#subtitle').textContent=[fecha(g.event_date),g.budget].filter(Boolean).join(' · ');
+  const facts=[['Fecha',fecha(g.event_date)],['Hora',g.event_time],['Lugar',g.place],['Monto',g.budget]].filter(x=>x[1]);
+  $('#app').innerHTML=`
+   <section class="card reveal" id="revCard">${d.to?`
+     <p class="sub" id="tapHint">Toca el sobre para ver a quién le regalas.<br>Mejor ábrelo donde nadie vea tu pantalla.</p>
+     <div class="envelope" id="env"><div class="body"></div><div class="flap"></div><div class="seal">${esc((g.name||'I')[0])}</div></div>
+     <div id="out" class="hide">
+       <div class="lbl">Te toca regalarle a</div>
+       <div class="who">${esc(d.to.name)}</div>
+       <div class="wishbox">${d.to.wish?'<b>Su lista de deseos</b>\n'+esc(d.to.wish):'Todavía no escribe su lista de deseos. Vuelve a abrir este link más adelante para ver si ya la dejó.'}</div>
+     </div>`
+   :`<h2>Todavía no se hace el sorteo</h2><p class="sub" style="margin-top:6px">Cuando la organizadora sortee, en este mismo link vas a ver a quién le regalas. Mientras, puedes dejar tu lista de deseos.</p>`}
+   </section>
+   ${facts.length?`<section class="card"><h2 style="margin-bottom:10px">Los detalles</h2><dl class="facts">${facts.map(f=>`<dt>${f[0]}</dt><dd>${esc(f[1])}</dd>`).join('')}</dl></section>`:''}
+   ${g.message?`<section class="card"><h2 style="margin-bottom:8px">Indicaciones</h2><p class="msg">${esc(g.message)}</p></section>`:''}
+   <section class="card">
+     <h2>Tu lista de deseos</h2>
+     <p class="sub">La va a ver solo quien te regala. Pon ideas, tallas, colores, lo que te sirva.</p>
+     <textarea id="myWish" placeholder="Ej. Una vela aromática, talla M en ropa, me gusta el color verde">${esc(d.wish)}</textarea>
+     <button class="btn main" id="saveWish">Guardar mi lista</button>
+     <div class="status" id="wSt"></div>
+   </section>`;
+  const env=$('#env');
+  if(env){
+    const open=()=>{env.classList.add('open');$('#tapHint').classList.add('hide');setTimeout(()=>{$('#out').classList.remove('hide');env.classList.add('hide')},550);sessionStorage.setItem('ix_open_'+PTOK,'1')};
+    env.onclick=open;
+    if(sessionStorage.getItem('ix_open_'+PTOK)){env.classList.add('hide');$('#tapHint').classList.add('hide');$('#out').classList.remove('hide')}
+  }
+  $('#saveWish').onclick=async()=>{
+    const b=$('#saveWish');b.disabled=true;b.textContent='Guardando…';
+    try{await rpc('ix_set_wish',{ptok:PTOK,w:$('#myWish').value});$('#wSt').textContent='Guardada. Puedes cambiarla cuando quieras.';toast('Tu lista quedó guardada')}
+    catch(e){toast('No se pudo guardar, revisa tu internet')}
+    b.disabled=false;b.textContent='Guardar mi lista';
+  };
+}
+addEventListener('hashchange',()=>location.reload());
+</script>
+</body>
+</html>
