@@ -68,6 +68,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid #b48a3c55;border-color
 .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;z-index:20;max-width:90vw;text-align:center}
 .toast.on{opacity:1;transform:translateX(-50%)}
 .hide{display:none!important}
+.shead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.edit{border:1px solid #d9cdbb;background:#fff;border-radius:10px;padding:9px 16px;font:600 14px Figtree,sans-serif;color:var(--pine);cursor:pointer;flex:none}
+.btn.big{padding:17px;font-size:16.5px;margin-top:18px}
+.locked{opacity:.55}
+.more{cursor:pointer;font-size:14px;color:var(--pine);margin-top:14px;padding:4px 0}
+.names{font-size:15px;line-height:1.6}
+.rtop{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.acts .btn.wa{flex:2}.acts .btn.quiet{flex:1}
 /* participante */
 .envelope{margin:6px auto 4px;width:220px;height:150px;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .envelope .body{position:absolute;inset:0;background:#f0e2c8;border-radius:8px;border:1px solid #dcc8a5}
@@ -124,150 +132,176 @@ function noLink(){
 }
 
 /* ================= ORGANIZADORA ================= */
-let S=null; // {group, people}
-let saveTimer=null;
+let S=null, saveTimer=null, pollT=null;
+const E={s1:false,s2:false};
 async function adminInit(){
-  $('#kicker').textContent='Panel de la organizadora';
+  $('#kicker').textContent='Tu panel para organizar';
   try{S=await rpc('ix_admin_get',{tok:ADMIN})}catch(e){
     $('#app').innerHTML=`<div class="card"><h2>Este link no funciona</h2><p class="sub" style="margin-top:6px">Revisa que lo hayas copiado completo.</p></div>`;return}
+  E.s1=!s1Done();
+  E.s2=s1Done()&&!S.group.drawn_at&&(S.people.length<3||!localStorage.getItem('ix_s2_'+ADMIN.slice(0,6)));
   renderAdmin();
 }
+const s1Done=()=>!!(S.group.event_date&&S.group.budget);
+const drawn=()=>!!S.group.drawn_at;
+const val=(id,k)=>{const e=$('#'+id);return e?e.value:(S.group[k]??'')};
 function settingsFromForm(){
-  return{name:$('#gName').value,event_date:$('#gDate').value,event_time:$('#gTime').value,place:$('#gPlace').value,budget:$('#gBudget').value,message:$('#gMsg').value,exclusions:S.group.exclusions||[]};
+  return{name:val('gName','name'),event_date:val('gDate','event_date'),event_time:val('gTime','event_time'),place:val('gPlace','place'),budget:val('gBudget','budget'),message:val('gMsg','message'),exclusions:S.group.exclusions||[]};
 }
-function peopleList(){return S.people.map(p=>({id:p.id,name:p.name}))}
-async function save(people,opts={}){
-  $('#saveSt')&&($('#saveSt').textContent='Guardando…');
+const peopleList=()=>S.people.map(p=>({id:p.id,name:p.name}));
+async function save(people){
+  const st=$('#saveSt');if(st)st.textContent='Guardando…';
   try{
     S=await rpc('ix_admin_save',{tok:ADMIN,settings:settingsFromForm(),people:people||peopleList()});
-    $('#saveSt')&&($('#saveSt').textContent='Cambios guardados');
-    if(opts.full)renderAdmin(); else {renderHead();renderPeople();renderDraw();}
-  }catch(e){toast('No se pudo guardar. Revisa tu internet e inténtalo otra vez.');$('#saveSt')&&($('#saveSt').textContent='Sin guardar')}
+    if($('#saveSt'))$('#saveSt').textContent='Guardado';
+    renderHead();renderS2();renderS3();return true;
+  }catch(e){toast('No se pudo guardar. Revisa tu internet e inténtalo otra vez.');if($('#saveSt'))$('#saveSt').textContent='Sin guardar';return false}
 }
-function drawn(){return !!S.group.drawn_at}
-function confirmBreak(){return !drawn()||confirm('Ya hiciste el sorteo. Si cambias la lista hay que volver a sortear.\n\nLos links de cada persona siguen siendo los mismos, solo avísales que se sorteó de nuevo. ¿Continuar?')}
+function confirmBreak(){return !drawn()||confirm('Ya hiciste el sorteo. Si cambias los nombres, hay que sortear otra vez.\n\nCada persona conserva su mismo link; solo avísales que se volvió a sortear. ¿Seguir?')}
 function renderHead(){
   $('#title').textContent=S.group.name||'Intercambio navideño';
   const bits=[fecha(S.group.event_date),S.group.budget].filter(Boolean);
-  $('#subtitle').textContent=bits.join(' · ')||'Llena los datos, agrega a quienes participan y haz el sorteo.';
+  $('#subtitle').textContent=bits.join(' · ')||'Son 3 pasos: datos, nombres y sorteo.';
 }
 function renderAdmin(){
-  const g=S.group;
   renderHead();
-  $('#app').innerHTML=`
-  <section class="card">
-    <div class="step">Paso 1</div><h2>Datos del intercambio</h2>
-    <p class="sub">Todo se guarda solo. Puedes cambiarlo cuando quieras.</p>
+  $('#app').innerHTML=`<section class="card" id="s1"></section><section class="card" id="s2"></section><section class="card" id="s3"></section>`;
+  renderS1();renderS2();renderS3();
+}
+function head(n,t,done,editId){
+  return `<div class="shead"><div><div class="step">${done?'✓ ':''}Paso ${n}</div><h2>${t}</h2></div>${editId?`<button class="edit" id="${editId}">Editar</button>`:''}</div>`;
+}
+function renderS1(){
+  const g=S.group,c=$('#s1');
+  if(!E.s1){
+    const rows=[['Nombre',g.name],['Fecha',fecha(g.event_date)],['Hora',g.event_time],['Lugar',g.place],['Monto',g.budget]].filter(x=>x[1]);
+    c.innerHTML=head(1,'Datos del intercambio',true,'e1')+`<dl class="facts">${rows.map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join('')}</dl>${g.message?`<p class="msg" style="margin-top:10px;color:var(--soft)">${esc(g.message)}</p>`:''}`;
+    $('#e1').onclick=()=>{E.s1=true;renderS1();$('#gName').focus()};return;
+  }
+  const extra=g.event_time||g.place||g.message;
+  c.innerHTML=head(1,'Datos del intercambio',false)+`
     <label for="gName">Nombre del intercambio</label><input id="gName" value="${esc(g.name)}" maxlength="80">
-    <div class="two">
-      <div><label for="gDate">Fecha</label><input id="gDate" type="date" value="${esc(g.event_date||'')}"></div>
-      <div><label for="gTime">Hora <span style="font-weight:400">(opcional)</span></label><input id="gTime" value="${esc(g.event_time)}" placeholder="Ej. 6:00 pm" maxlength="40"></div>
-    </div>
-    <label for="gPlace">Lugar <span style="font-weight:400">(opcional)</span></label><input id="gPlace" value="${esc(g.place)}" placeholder="Ej. Casa de Paty" maxlength="150">
-    <label for="gBudget">Monto del regalo</label><input id="gBudget" value="${esc(g.budget)}" placeholder="Ej. $300 a $400" maxlength="60">
-    <label for="gMsg">Mensaje o reglas para el grupo <span style="font-weight:400">(opcional)</span></label>
-    <textarea id="gMsg" placeholder="Ej. Traer el regalo envuelto y con el nombre de quien lo recibe.">${esc(g.message)}</textarea>
-    <div class="status" id="saveSt"></div>
-  </section>
-  <section class="card">
-    <div class="step">Paso 2</div><h2>Participantes <span class="count" id="cnt"></span></h2>
-    <p class="sub">Toca un nombre para corregirlo.</p>
-    <div id="people"></div>
+    <label for="gDate">¿Qué día es?</label><input id="gDate" type="date" value="${esc(g.event_date||'')}">
+    <label for="gBudget">¿De cuánto es el regalo?</label><input id="gBudget" value="${esc(g.budget)}" placeholder="Ej. $300" maxlength="60" inputmode="text">
+    <details ${extra?'open':''}><summary class="more">Agregar hora, lugar o un mensaje (si quieres)</summary>
+      <label for="gTime">Hora</label><input id="gTime" value="${esc(g.event_time)}" placeholder="Ej. 6:00 pm" maxlength="40">
+      <label for="gPlace">Lugar</label><input id="gPlace" value="${esc(g.place)}" placeholder="Ej. Casa de Paty" maxlength="150">
+      <label for="gMsg">Mensaje para el grupo</label><textarea id="gMsg" placeholder="Ej. Traer el regalo envuelto y con nombre.">${esc(g.message)}</textarea>
+    </details>
+    <button class="btn main big" id="ok1">Guardar y seguir</button>
+    <div class="status" id="saveSt"></div>`;
+  ['gName','gDate','gTime','gPlace','gBudget','gMsg'].forEach(id=>$('#'+id).addEventListener('input',()=>{clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(),800)}));
+  $('#ok1').onclick=async()=>{
+    if(!$('#gDate').value)return toast('Falta poner la fecha'),$('#gDate').focus();
+    if(!$('#gBudget').value.trim())return toast('Falta poner el monto del regalo'),$('#gBudget').focus();
+    clearTimeout(saveTimer);
+    if(await save()){E.s1=false;if(!drawn())E.s2=true;renderS1();renderS2();renderS3();$('#s2').scrollIntoView({behavior:'smooth'})}
+  };
+}
+function renderS2(){
+  const c=$('#s2');
+  if(!s1Done()&&!S.people.length&&E.s1){c.innerHTML=head(2,'¿Quiénes participan?',false)+`<p class="sub">Primero llena el paso 1.</p>`;c.classList.add('locked');return}
+  c.classList.remove('locked');
+  if(!E.s2){
+    c.innerHTML=head(2,`¿Quiénes participan? <span class="count">${S.people.length}</span>`,S.people.length>=3,'e2')+
+      (S.people.length?`<p class="names">${S.people.map(p=>esc(p.name)).join(', ')}</p>`:`<p class="sub">Todavía no hay nombres.</p>`);
+    $('#e2').onclick=()=>{E.s2=true;renderS2();renderS3();$('#newName')&&$('#newName').focus()};return;
+  }
+  c.innerHTML=head(2,`¿Quiénes participan? <span class="count">${S.people.length}</span>`,false)+`
+    <p class="sub">Escribe un nombre y toca Agregar. Si ya tienes la lista, pégala completa.</p>
     <div class="addrow"><input id="newName" placeholder="Nombre" maxlength="60" enterkeyhint="done"><button class="btn pine" id="addBtn">Agregar</button></div>
-    <button class="link" id="bulkToggle">¿Tienes la lista completa? Pégala aquí</button>
+    <button class="link" id="bulkToggle">Pegar la lista completa</button>
     <div id="bulk" class="hide">
-      <label for="bulkTxt">Un nombre por renglón</label>
-      <textarea id="bulkTxt" placeholder="Paty&#10;Gaby&#10;Lucía"></textarea>
+      <textarea id="bulkTxt" placeholder="Un nombre por renglón&#10;Paty&#10;Gaby&#10;Lucía"></textarea>
       <button class="btn quiet" id="bulkAdd">Agregar todos</button>
     </div>
-    <details style="margin-top:14px"><summary style="cursor:pointer;font-size:14px;color:var(--pine)">Parejas que no se deben tocar (opcional)</summary>
-      <p class="sub" style="margin-top:8px">Por ejemplo, hermanas o esposos que no quieren regalarse entre sí.</p>
-      <div id="exList"></div>
-      <div class="two"><select id="exA"></select><select id="exB"></select></div>
-      <button class="btn quiet" id="exAdd">Agregar pareja</button>
-    </details>
-  </section>
-  <section class="card" id="drawCard"></section>`;
-  ['gName','gDate','gTime','gPlace','gBudget','gMsg'].forEach(id=>$('#'+id).addEventListener('input',()=>{
-    $('#saveSt').textContent='…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(),700)}));
+    <div id="people" style="margin-top:12px"></div>
+    <button class="btn main big" id="ok2" ${S.people.length<3?'disabled':''}>Listo, ya están todos</button>
+    ${S.people.length<3?'<p class="sub" style="text-align:center;margin-top:8px">Se necesitan al menos 3 personas.</p>':''}`;
+  $('#people').innerHTML=S.people.map((p,i)=>`<div class="person"><span class="num">${i+1}</span><input value="${esc(p.name)}" data-id="${p.id}" maxlength="60" aria-label="Nombre"><button class="del" data-id="${p.id}" aria-label="Quitar">×</button></div>`).join('');
   $('#addBtn').onclick=addOne;
   $('#newName').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addOne()}});
-  $('#bulkToggle').onclick=()=>$('#bulk').classList.toggle('hide');
-  $('#bulkAdd').onclick=()=>{
+  $('#bulkToggle').onclick=()=>{$('#bulk').classList.toggle('hide');$('#bulkTxt').focus()};
+  $('#bulkAdd').onclick=async()=>{
     const names=$('#bulkTxt').value.split(/\n|,/).map(s=>s.trim()).filter(Boolean);
     if(!names.length)return toast('Escribe al menos un nombre');
     if(!confirmBreak())return;
     const have=new Set(S.people.map(p=>p.name.toLowerCase()));
     const fresh=names.filter(n=>{const k=n.toLowerCase();if(have.has(k))return false;have.add(k);return true});
-    save([...peopleList(),...fresh.map(name=>({name}))]).then(()=>{$('#bulkTxt').value='';$('#bulk').classList.add('hide');toast(fresh.length+' agregadas')});
+    if(await save([...peopleList(),...fresh.map(name=>({name}))]))toast(fresh.length===1?'Se agregó 1 nombre':'Se agregaron '+fresh.length+' nombres');
   };
-  $('#exAdd').onclick=()=>{
-    const a=$('#exA').value,b=$('#exB').value;
-    if(!a||!b||a===b)return toast('Elige dos personas distintas');
-    if(!confirmBreak())return;
-    S.group.exclusions=[...(S.group.exclusions||[]),[a,b]];save(null);
-  };
-  renderPeople();renderDraw();
-}
-function addOne(){
-  const n=$('#newName').value.trim();
-  if(!n)return toast('Escribe un nombre');
-  if(S.people.some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Ese nombre ya está en la lista');
-  if(!confirmBreak())return;
-  $('#newName').value='';
-  save([...peopleList(),{name:n}]).then(()=>$('#newName').focus());
-}
-function renderPeople(){
-  $('#cnt').textContent=S.people.length;
-  $('#people').innerHTML=S.people.length?S.people.map((p,i)=>`<div class="person"><span class="num">${i+1}</span><input value="${esc(p.name)}" data-id="${p.id}" maxlength="60" aria-label="Nombre"><button class="del" data-id="${p.id}" aria-label="Quitar">×</button></div>`).join('')
-    :`<div class="empty">Aún no hay nadie. Escribe el primer nombre abajo.</div>`;
   document.querySelectorAll('.person input').forEach(inp=>inp.addEventListener('change',()=>{
     const v=inp.value.trim();const p=S.people.find(x=>x.id===inp.dataset.id);
-    if(!v){inp.value=p.name;return}
-    p.name=v;save();
+    if(!v){inp.value=p.name;return}p.name=v;save();
   }));
   document.querySelectorAll('.person .del').forEach(b=>b.onclick=()=>{
     const p=S.people.find(x=>x.id===b.dataset.id);
-    if(!confirm('¿Quitar a '+p.name+' del intercambio?'))return;
+    if(!confirm('¿Quitar a '+p.name+'?'))return;
     if(!confirmBreak())return;
     S.group.exclusions=(S.group.exclusions||[]).filter(e=>!e.includes(p.id));
     save(peopleList().filter(x=>x.id!==p.id));
   });
-  // exclusiones
+  $('#ok2').onclick=()=>{localStorage.setItem('ix_s2_'+ADMIN.slice(0,6),'1');E.s2=false;renderS2();renderS3();$('#s3').scrollIntoView({behavior:'smooth'})};
+}
+async function addOne(){
+  const n=$('#newName').value.trim();
+  if(!n)return toast('Escribe un nombre');
+  if(S.people.some(p=>p.name.toLowerCase()===n.toLowerCase()))return toast('Ese nombre ya está');
+  if(!confirmBreak())return;
+  $('#newName').value='';
+  await save([...peopleList(),{name:n}]);$('#newName')&&$('#newName').focus();
+}
+function renderS3(){
+  const c=$('#s3');clearInterval(pollT);
+  const ready=s1Done()&&S.people.length>=3&&!E.s2;
+  if(!drawn()){
+    c.innerHTML=head(3,'Sortear y mandar links',false)+(ready?
+      `<p class="sub">Toca el botón y el sistema sortea solo. A nadie le sale su propio nombre y nadie, ni tú, ve quién le tocó a quién.</p>
+       <button class="btn main big" id="drawBtn">Hacer el sorteo</button>${moreOpts()}`
+      :`<p class="sub">${!s1Done()?'Primero llena el paso 1.':'Agrega los nombres y toca "Listo, ya están todos".'}</p>`);
+    c.classList.toggle('locked',!ready);
+    if(ready){$('#drawBtn').onclick=doDraw;bindMore()}
+    return;
+  }
+  c.classList.remove('locked');
+  const opened=S.people.filter(p=>p.opened).length;
+  c.innerHTML=head(3,'Manda a cada quien su link',true)+`
+    <p class="sub">El sorteo ya está hecho. Toca <b>WhatsApp</b> junto a cada nombre y elige a esa persona. En su link verá a quién le regala y podrá escribir su lista de deseos.</p>
+    <div class="tags"><span class="tag on">${opened} de ${S.people.length} ya abrieron su link</span></div>
+    <div id="links">${S.people.map(p=>`<div class="row"><div class="rtop"><span class="nm">${esc(p.name)}</span><span class="tag ${p.opened?'on':''}">${p.opened?'Ya lo vio':'Aún no lo abre'}</span></div>
+      <div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(waText(p))}">WhatsApp</a><button class="btn quiet" data-copy="${p.id}">Copiar</button></div></div>`).join('')}</div>
+    ${moreOpts(true)}`;
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const p=S.people.find(x=>x.id===b.dataset.copy);copy(waText(p),b)});
+  bindMore();
+  pollT=setInterval(refresh,30000);
+}
+function moreOpts(after){
+  return `<details class="moreopts"><summary class="more">Más opciones</summary>
+    <div class="note" style="margin-top:10px"><b>Personas que no deben tocarse</b><br>Por ejemplo, hermanas o esposos.</div>
+    <div id="exList"></div>
+    <div class="two" style="margin-top:8px"><select id="exA"></select><select id="exB"></select></div>
+    <button class="btn quiet" id="exAdd">Agregar</button>
+    ${after?`<button class="btn quiet" id="redraw">Volver a sortear</button>
+    <button class="btn quiet" id="reveal">Ver quién le toca a quién</button><div id="pairs" class="pairs"></div>`:''}
+  </details>`;
+}
+function bindMore(){
   const name=id=>(S.people.find(p=>p.id===id)||{}).name;
   const ex=(S.group.exclusions||[]).filter(e=>name(e[0])&&name(e[1]));
   $('#exList').innerHTML=ex.map((e,i)=>`<div class="excl"><span>${esc(name(e[0]))} y ${esc(name(e[1]))}</span><button class="del" data-ex="${i}" aria-label="Quitar">×</button></div>`).join('');
-  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{if(!confirmBreak())return;S.group.exclusions=ex.filter((_,i)=>i!=b.dataset.ex);save(null)});
+  document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{if(!confirmBreak())return;S.group.exclusions=ex.filter((_,i)=>i!=b.dataset.ex);save().then(keepOpen)});
   const opts='<option value="">Elige…</option>'+S.people.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
   $('#exA').innerHTML=opts;$('#exB').innerHTML=opts;
+  $('#exAdd').onclick=()=>{
+    const a=$('#exA').value,b=$('#exB').value;
+    if(!a||!b||a===b)return toast('Elige dos personas distintas');
+    if(!confirmBreak())return;
+    S.group.exclusions=[...ex,[a,b]];save().then(keepOpen);
+  };
+  if($('#redraw'))$('#redraw').onclick=()=>{if(confirm('¿Sortear otra vez? Cada persona conserva su mismo link, pero avísales que cambió.'))doDraw()};
+  if($('#reveal'))$('#reveal').onclick=reveal;
 }
-let pollT=null;
-function renderDraw(){
-  const c=$('#drawCard');clearInterval(pollT);
-  if(!drawn()){
-    c.innerHTML=`<div class="step">Paso 3</div><h2>Sorteo</h2>
-      <p class="sub">Cuando ya estén todos los nombres, haz el sorteo. A nadie le sale su propio nombre y nadie, ni tú, ve los resultados.</p>
-      ${S.people.length<3?'<div class="note">Agrega al menos 3 personas para poder sortear.</div>':''}
-      <button class="btn main" id="drawBtn" ${S.people.length<3?'disabled':''}>Hacer el sorteo</button>`;
-    $('#drawBtn').onclick=doDraw;return;
-  }
-  const opened=S.people.filter(p=>p.opened).length;
-  c.innerHTML=`<div class="step">Paso 3</div><h2>Manda los links</h2>
-    <p class="sub">El sorteo ya está hecho. Manda a cada persona su link personal; ahí ve a quién le regala y escribe su lista de deseos.</p>
-    <div class="tags"><span class="tag on">${opened} de ${S.people.length} ya abrieron su link</span></div>
-    <div id="links">${S.people.map(p=>`<div class="row"><div class="nm">${esc(p.name)}</div>
-      <div class="tags"><span class="tag ${p.opened?'on':''}">${p.opened?'Ya lo abrió':'Aún no lo abre'}</span>${p.has_wish?'<span class="tag on">Lista de deseos lista</span>':''}</div>
-      <div class="acts"><button class="btn quiet" data-copy="${p.id}">Copiar link</button><a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(waText(p))}">WhatsApp</a></div></div>`).join('')}</div>
-    <button class="btn quiet" id="refresh">Actualizar quién ya abrió</button>
-    <button class="btn quiet" id="redraw">Volver a sortear</button>
-    <button class="link" id="reveal">Ver quién le toca a quién</button>
-    <div id="pairs" class="pairs"></div>`;
-  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{const p=S.people.find(x=>x.id===b.dataset.copy);copy(BASE+'#p='+p.token,b)});
-  $('#refresh').onclick=refresh;
-  $('#redraw').onclick=()=>{if(confirm('¿Volver a sortear? Lo que cada quien ya vio deja de valer. Los links siguen siendo los mismos, pero avísales que se sorteó de nuevo.'))doDraw()};
-  $('#reveal').onclick=reveal;
-  pollT=setInterval(refresh,30000);
-}
+const keepOpen=()=>{const d=$('.moreopts');if(d)d.open=true};
 function waText(p){
   return `¡Hola ${p.name}! Ya quedó el sorteo de "${S.group.name}". En este link ves a quién le regalas y puedes dejar tu lista de deseos. Es solo tuyo, no lo compartas:\n${BASE}#p=${p.token}`;
 }
@@ -275,15 +309,15 @@ async function copy(t,b){
   try{await navigator.clipboard.writeText(t)}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
   if(b){const o=b.textContent;b.textContent='Copiado';setTimeout(()=>b.textContent=o,1500)}
 }
-async function refresh(){try{S=await rpc('ix_admin_get',{tok:ADMIN});renderPeople();renderDraw()}catch(e){}}
+async function refresh(){if(document.querySelector('.moreopts[open]'))return;try{S=await rpc('ix_admin_get',{tok:ADMIN});renderS3()}catch(e){}}
 async function doDraw(){
   const b=$('#drawBtn')||$('#redraw');if(b){b.disabled=true;b.textContent='Sorteando…'}
-  try{S=await rpc('ix_admin_draw',{tok:ADMIN});renderDraw();toast('¡Listo! Sorteo hecho');$('#drawCard').scrollIntoView({behavior:'smooth'})}
-  catch(e){toast(e.message==='sin_solucion'?'Con esas parejas excluidas no se puede sortear. Quita alguna.':'No se pudo sortear, inténtalo otra vez.');renderDraw()}
+  try{S=await rpc('ix_admin_draw',{tok:ADMIN});E.s2=false;renderS2();renderS3();toast('¡Listo! Ya quedó el sorteo');$('#s3').scrollIntoView({behavior:'smooth'})}
+  catch(e){toast(e.message==='sin_solucion'?'Con esas personas que no deben tocarse no se puede sortear. Quita alguna.':'No se pudo sortear, inténtalo otra vez.');renderS3()}
 }
 async function reveal(){
   if($('#pairs').innerHTML){$('#pairs').innerHTML='';return}
-  if(!confirm('Esto te muestra a quién le tocó cada persona. Si lo ves, ya no será secreto para ti. ¿Seguro?'))return;
+  if(!confirm('Esto te muestra a quién le tocó cada persona y ya no será secreto para ti. ¿Seguro?'))return;
   try{const r=await rpc('ix_admin_reveal',{tok:ADMIN});$('#pairs').innerHTML=r.map(x=>`<div><span>${esc(x.from)}</span><span>→ ${esc(x.to)}</span></div>`).join('')}catch(e){toast('No se pudo cargar')}
 }
 
